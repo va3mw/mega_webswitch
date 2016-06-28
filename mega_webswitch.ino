@@ -1,3 +1,22 @@
+
+/*
+*  This is the nega webswitch  version 1.5 for the remoteQth.com
+*  If you need help, feel free to contact DM5XX@gmx.de
+*  Sketch is developed with IDE Version 1.6.9 and later
+*
+*  This is free software. You can redistribute it and/or modify it under
+*  the terms of Creative Commons Attribution 3.0 United States License if at least the version information says credits to remoteQTH.com :P
+*
+*  To view a copy of this license, visit http://creativecommons.org/licenses/by/3.0/us/
+*  or send a letter to Creative Commons, 171 Second Street, Suite 300, San Francisco, California, 94105, USA.
+*
+*	Tribute to OL7M!
+*  LLAP!
+*/
+
+
+
+
 #if ARDUINO > 18
 #include <SPI.h>
 #endif
@@ -8,8 +27,8 @@
 //#define FILLARRAY(a,n) a[0]=n, memcpy( ((char*)a)+sizeof(a[0]), a, sizeof(a)-sizeof(a[0]) );
 
 byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };  
-byte ip[] = { 192, 168, 1, 179 };                      
-byte gateway[] = { 192, 168, 1, 40 };                   
+byte ip[] = { 192, 168, 1, 177 };                      
+byte gateway[] = { 192, 168, 1, 41 };                   
 byte subnet[] = { 255, 255, 255, 0 };                  
 EthernetServer server(80);                                  
 String requestString;
@@ -19,6 +38,7 @@ String deviceIp;
 String gatewayIp;
 String title;
 String jsUrl;
+String jqueryUrl;
 String cssUrl;
 String faviconUrl;
 String dotUrl;
@@ -37,25 +57,25 @@ boolean stayOnPinsBank2[16] =   { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
 boolean stayOnPinsBank3[16] =	{ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
 
 //arrays to define which buttons are long-on-button. startin with 0, setting 1 to the long switch buttons. must be 1:1 matched to the js buttons/description
-boolean is5sPinBank0[] =        { 0,0,0,0,0,1,0,0,1,0,0,1,0,0,0,0 }; // 3 in bank0
-boolean is5sPinBank1[] =        { 0,0,1,0,0,0,0,0,0,1,0,1,0,0,0,0 }; // 3 in bank1
-boolean is5sPinBank2[] =        { 0,0,1,0,1,0,1,0,1,0,0,0,1,0,1,0 }; // 6 in bank2
+boolean is5sPinBank0[] =        { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }; // 3 in bank0
+boolean is5sPinBank1[] =        { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }; // 3 in bank1
+boolean is5sPinBank2[] =        { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }; // 6 in bank2
 boolean is5sPinBank3[] =		{ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }; // 0 in bank 3
 
-boolean isOffPinBank0[] =       { 0,0,0,0,0,0,1,0,0,1,0,0,1,0,0,0 }; // define if a button is a long-off-button. uses index from js file as everything else
-boolean isOffPinBank1[] =       { 0,0,0,1,0,0,0,0,0,0,1,0,1,0,0,0 };
-boolean isOffPinBank2[] =       { 0,0,0,1,0,1,0,1,0,1,0,0,0,1,0,1 };
+boolean isOffPinBank0[] =       { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }; // define if a button is a long-off-button. uses index from js file as everything else
+boolean isOffPinBank1[] =       { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
+boolean isOffPinBank2[] =       { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
 boolean isOffPinBank3[] =		{ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
 
-byte indexOfOffPinPairBank0[] = { 0,0,0,0,0,0,5,0,0,8,0,0,11,0,0,0 }; // definition which on-index the off-index belongs to
-byte indexOfOffPinPairBank1[] = { 0,0,0,2,0,0,0,0,0,0,9,0,11,0,0,0 };
-byte indexOfOffPinPairBank2[] = { 0,0,0,2,0,4,0,6,0,8,0,0,0,12,0,14 };
+byte indexOfOffPinPairBank0[] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }; // definition which on-index the off-index belongs to
+byte indexOfOffPinPairBank1[] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
+byte indexOfOffPinPairBank2[] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
 byte indexOfOffPinPairBank3[] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
 
 // push duration - Adjust the individual push duration of a "long push button" here - On & Off
-byte pushDurationBank0[] =      { 0,0,0,0,0,5,1,0,5,1,0,5,1,0,0,0 };
-byte pushDurationBank1[] =      { 0,0,1,1,0,0,0,0,0,5,1,1,1,0,0,0 };
-byte pushDurationBank2[] =      { 0,0,5,1,1,1,5,1,1,1,0,0,5,1,5,1 };
+byte pushDurationBank0[] =      { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
+byte pushDurationBank1[] =      { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
+byte pushDurationBank2[] =      { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
 byte pushDurationBank3[] =		{ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
 
 
@@ -72,6 +92,32 @@ unsigned long longOffCleanUpTimeBank2[16];
 unsigned long longOffCleanUpTimeBank3[16];
 
 unsigned long lastWatchdogRun;
+
+String strpinsBank0;
+String strpinsBank1;
+String strpinsBank2;
+String strpinsBank3;
+String strstayOnPinsBank0;
+String strstayOnPinsBank1;
+String strstayOnPinsBank2;
+String strstayOnPinsBank3;
+String stris5sPinBank0;
+String stris5sPinBank1;
+String stris5sPinBank2;
+String stris5sPinBank3;
+String strisOffPinBank0;
+String strisOffPinBank1;
+String strisOffPinBank2;
+String strisOffPinBank3;
+String strindexOfOffPinPairBank0;
+String strindexOfOffPinPairBank1;
+String strindexOfOffPinPairBank2;
+String strindexOfOffPinPairBank3;
+String strpushDurationBank0;
+String strpushDurationBank1;
+String strpushDurationBank2;
+String strpushDurationBank3;
+
 
 void setup()
 {  
@@ -92,11 +138,12 @@ void setup()
   server.begin();          // Server starten
   
   if (!SD.begin(4)) {
-   //Serial.println("initialization failed!");
+     Serial.println("initialization failed!");
    return;
   }
-  //Serial.println("initialization done.");
+  Serial.println("initialization done.");
   readSDSettings();
+  initBanksFromSDCarsd();
   ip[0] = getStringPartByNr(deviceIp, '.', 0).toInt();
   ip[1] = getStringPartByNr(deviceIp, '.', 1).toInt();
   ip[2] = getStringPartByNr(deviceIp, '.', 2).toInt();
@@ -108,13 +155,14 @@ void setup()
   gateway[3] = getStringPartByNr(gatewayIp, '.', 3).toInt();
 
   Ethernet.begin(mac, ip); // Client starten
-  //Serial.print("server is at ");
-  //Serial.println(Ethernet.localIP());
+  Serial.print("server is at ");
+  Serial.println(Ethernet.localIP());
    
   adjustTime(10); // dont start with 0... think about buffer underruns of longs :P 
   lastWatchdogRun = now(); // set the whatchdog to current time. since there is no timesync, its second "10" in the year 0 (1970)
 
   //digitalWrite(56, HIGH); // use 53 still as an output - remember sd card operation may be disabled now... so this is a workaround.
+
 }
 
 
@@ -384,27 +432,79 @@ void readSDSettings()
 			if(settingName == "ajaxUrl")
 				ajaxUrl = settingValue;
 		
-			if(settingName == "deviceIp")
+			else if(settingName == "deviceIp")
 				deviceIp = settingValue;
 
-                        if(settingName == "gatewayIp")
+			else if (settingName == "gatewayIp")
 				gatewayIp = settingValue;
 
-                        if(settingName == "title")
+			else if (settingName == "title")
 				title = settingValue;
 
-			if(settingName == "jsUrl")
+			else if (settingName == "jsUrl")
 				jsUrl = settingValue;
 
-			if(settingName == "cssUrl")
+			else if (settingName == "cssUrl")
 				cssUrl = settingValue;
 
-			if(settingName == "faviconUrl")
+			else if (settingName == "faviconUrl")
 				faviconUrl = settingValue;
 
-			if(settingName == "dotUrl")
+			else if (settingName == "dotUrl")
 				dotUrl = settingValue;
-			
+
+			else if (settingName == "jqueryUrl")
+				jqueryUrl = settingValue;
+
+			else if (settingName == "strpinsBank0")
+				strpinsBank0 = settingValue;
+			else if (settingName == "strpinsBank1")
+				strpinsBank1 = settingValue;
+			else if (settingName == "strpinsBank2")
+				strpinsBank2 = settingValue;
+			else if (settingName == "strpinsBank3")
+				strpinsBank3 = settingValue;
+			else if (settingName == "strstayOnPinsBank0")
+				strstayOnPinsBank0 = settingValue;
+			else if (settingName == "strstayOnPinsBank1")
+				strstayOnPinsBank1 = settingValue;
+			else if (settingName == "strstayOnPinsBank2")
+				strstayOnPinsBank2 = settingValue;
+			else if (settingName == "strstayOnPinsBank3")
+				strstayOnPinsBank3 = settingValue;
+			else if (settingName == "stris5sPinBank0")
+				stris5sPinBank0 = settingValue;
+			else if (settingName == "stris5sPinBank1")
+				stris5sPinBank1 = settingValue;
+			else if (settingName == "stris5sPinBank2")
+				stris5sPinBank2 = settingValue;
+			else if (settingName == "stris5sPinBank3")
+				stris5sPinBank3 = settingValue;
+			else if (settingName == "strisOffPinBank0")
+				strisOffPinBank0 = settingValue;
+			else if (settingName == "strisOffPinBank1")
+				strisOffPinBank1 = settingValue;
+			else if (settingName == "strisOffPinBank2")
+				strisOffPinBank2 = settingValue;
+			else if (settingName == "strisOffPinBank3")
+				strisOffPinBank3 = settingValue;
+			else if (settingName == "strindexOfOffPinPairBank0")
+				strindexOfOffPinPairBank0 = settingValue;
+			else if (settingName == "strindexOfOffPinPairBank1")
+				strindexOfOffPinPairBank1 = settingValue;
+			else if (settingName == "strindexOfOffPinPairBank2")
+				strindexOfOffPinPairBank2 = settingValue;
+			else if (settingName == "strindexOfOffPinPairBank3")
+				strindexOfOffPinPairBank3 = settingValue;
+			else if (settingName == "strpushDurationBank0")
+				strpushDurationBank0 = settingValue;
+			else if (settingName == "strpushDurationBank1")
+				strpushDurationBank1 = settingValue;
+			else if (settingName == "strpushDurationBank2")
+				strpushDurationBank2 = settingValue;
+			else if (settingName == "strpushDurationBank3")
+				strpushDurationBank3 = settingValue;
+
 			settingName = "";
 			settingValue = "";
 		}
@@ -419,6 +519,42 @@ void readSDSettings()
  }
 
 
+void getByteArray(String strResponse, byte tempByteArray[])
+{
+	String tempBy[16];
+	getStringArray(strResponse, tempBy);
+
+	for (int a = 0; a < 16; a++)
+		tempByteArray[a] = (byte)tempBy[a].toInt();
+}
+
+void getBoolArray(String strResponse, boolean tempBoolArray[])
+{
+	String tempBol[16];
+	getStringArray(strResponse, tempBol);
+
+	for (int a = 0; a < 16; a++)
+		tempBoolArray[a] = (boolean)tempBol[a].toInt();
+}
+
+
+void getStringArray(String strResponse, String tempResult[])
+{
+	// Convert from String Object to String.
+	char buf[strResponse.length() + 1];
+	strResponse.toCharArray(buf, sizeof(buf));
+	char *p = buf;
+	char *str;
+	int cntr;
+	while ((str = strtok_r(p, ",", &p)) != NULL) // delimiter is the semicolon
+	{
+		tempResult[cntr] = String(str);
+		cntr += 1;
+	}
+}
+
+
+
 /**************************************************************************************************************************************************/
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++ INDEX AND PAGE CONTROL METHODS ++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 /**************************************************************************************************************************************************/
@@ -428,19 +564,23 @@ void setPinsOfBank(byte bankNr, String aRevertedBinaryString)
   byte result[16];
   byte lengthOfBinary = aRevertedBinaryString.length();
 
+ /* 
   Serial.print(bankNr);
   Serial.print("# RevertedString: ");
   Serial.println(aRevertedBinaryString);
-  
+*/
   for(byte b = 0; b < lengthOfBinary; b++)
   {
     result[b] = aRevertedBinaryString.charAt(b); // get a char out of a sting at position. remember: the value is the char value not 0 or 1... -48!
                                
     byte value = result[b]-48;
+
+/*
 	Serial.print(" Stelle ");
 	Serial.print(b);
 	Serial.print(" Value");
 	Serial.print(value);
+*/
 
 	if (value == 1) // if its 1 => turn pin on!
     {
@@ -545,6 +685,37 @@ String getComplete()
   return temp;
 }
 
+void initBanksFromSDCarsd()
+{
+	getByteArray(strpinsBank0, pinsBank0);
+	getByteArray(strpinsBank1, pinsBank1);
+	getByteArray(strpinsBank2, pinsBank2);
+	getByteArray(strpinsBank3, pinsBank3);
+
+	getBoolArray(strstayOnPinsBank0, stayOnPinsBank0);
+	getBoolArray(strstayOnPinsBank1, stayOnPinsBank1);
+	getBoolArray(strstayOnPinsBank2, stayOnPinsBank2);
+	getBoolArray(strstayOnPinsBank3, stayOnPinsBank3);
+	getBoolArray(stris5sPinBank0, is5sPinBank0);
+	getBoolArray(stris5sPinBank1, is5sPinBank1);
+	getBoolArray(stris5sPinBank2, is5sPinBank2);
+	getBoolArray(stris5sPinBank3, is5sPinBank3);
+	getBoolArray(strisOffPinBank0, isOffPinBank0);
+	getBoolArray(strisOffPinBank1, isOffPinBank1);
+	getBoolArray(strisOffPinBank2, isOffPinBank2);
+	getBoolArray(strisOffPinBank3, isOffPinBank3);
+
+	getByteArray(strindexOfOffPinPairBank0, indexOfOffPinPairBank0);
+	getByteArray(strindexOfOffPinPairBank1, indexOfOffPinPairBank1);
+	getByteArray(strindexOfOffPinPairBank2, indexOfOffPinPairBank2);
+	getByteArray(strindexOfOffPinPairBank3, indexOfOffPinPairBank3);
+	getByteArray(strpushDurationBank0, pushDurationBank0);
+	getByteArray(strpushDurationBank1, pushDurationBank1);
+	getByteArray(strpushDurationBank2, pushDurationBank2);
+	getByteArray(strpushDurationBank3, pushDurationBank3);
+}
+
+
 /*********************************************************************************************************************************/
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++ THE WEB PAGES ++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 /*********************************************************************************************************************************/
@@ -589,7 +760,10 @@ void MainPage(EthernetClient client, boolean isLocal)
    client.println("<HTML>");
    client.println("<HEAD>");
    client.println("<meta http-equiv=\"Cache-control\" content=\"no-cache\"><meta http-equiv=\"Expires\" content=\"0\">");
-   client.println("<script type=\"text/javascript\" src=\"http://code.jquery.com/jquery-1.11.2.min.js\"></script>");
+   client.print("<script type=\"text/javascript\" src=\"http://code.jquery.com/jquery-1.11.2.min.js\"></script>");
+   client.print("<script type=\"text/javascript\" src=\"");
+   client.print(jqueryUrl);
+   client.println("\"></script>");
    client.print("<script>var configAddress='");
    if(isLocal)
      client.print(deviceIp);
@@ -625,4 +799,6 @@ void MainPage(EthernetClient client, boolean isLocal)
    client.println("</BODY>");
    client.println("</HTML>");
 }
+
+
 
