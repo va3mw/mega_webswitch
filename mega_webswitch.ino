@@ -1,6 +1,6 @@
 
 /*
-*  This is the nega webswitch  version 1.5 for the remoteQth.com
+*  This is the nega webswitch  version 1.5.1 for the remoteQth.com
 *  If you need help, feel free to contact DM5XX@gmx.de
 *  Sketch is developed with IDE Version 1.6.9 and later
 *
@@ -97,10 +97,6 @@ String strpinsBank0;
 String strpinsBank1;
 String strpinsBank2;
 String strpinsBank3;
-String strstayOnPinsBank0;
-String strstayOnPinsBank1;
-String strstayOnPinsBank2;
-String strstayOnPinsBank3;
 String stris5sPinBank0;
 String stris5sPinBank1;
 String stris5sPinBank2;
@@ -464,14 +460,6 @@ void readSDSettings()
 				strpinsBank2 = settingValue;
 			else if (settingName == "strpinsBank3")
 				strpinsBank3 = settingValue;
-			else if (settingName == "strstayOnPinsBank0")
-				strstayOnPinsBank0 = settingValue;
-			else if (settingName == "strstayOnPinsBank1")
-				strstayOnPinsBank1 = settingValue;
-			else if (settingName == "strstayOnPinsBank2")
-				strstayOnPinsBank2 = settingValue;
-			else if (settingName == "strstayOnPinsBank3")
-				strstayOnPinsBank3 = settingValue;
 			else if (settingName == "stris5sPinBank0")
 				stris5sPinBank0 = settingValue;
 			else if (settingName == "stris5sPinBank1")
@@ -692,10 +680,6 @@ void initBanksFromSDCarsd()
 	getByteArray(strpinsBank2, pinsBank2);
 	getByteArray(strpinsBank3, pinsBank3);
 
-	getBoolArray(strstayOnPinsBank0, stayOnPinsBank0);
-	getBoolArray(strstayOnPinsBank1, stayOnPinsBank1);
-	getBoolArray(strstayOnPinsBank2, stayOnPinsBank2);
-	getBoolArray(strstayOnPinsBank3, stayOnPinsBank3);
 	getBoolArray(stris5sPinBank0, is5sPinBank0);
 	getBoolArray(stris5sPinBank1, is5sPinBank1);
 	getBoolArray(stris5sPinBank2, is5sPinBank2);
