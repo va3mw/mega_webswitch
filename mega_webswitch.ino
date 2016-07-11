@@ -1,6 +1,6 @@
 
 /*
-*  This is the nega webswitch  version 1.5.1 for the remoteQth.com
+*  This is the mega webswitch  version 1.5.2 for the remoteQth.com
 *  If you need help, feel free to contact DM5XX@gmx.de
 *  Sketch is developed with IDE Version 1.6.9 and later
 *
@@ -25,6 +25,8 @@
 #include <Time.h>
 #include <SD.h>
 //#define FILLARRAY(a,n) a[0]=n, memcpy( ((char*)a)+sizeof(a[0]), a, sizeof(a)-sizeof(a[0]) );
+
+boolean debug = true;
 
 byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };  
 byte ip[] = { 192, 168, 1, 177 };                      
@@ -92,6 +94,10 @@ unsigned long longOffCleanUpTimeBank2[16];
 unsigned long longOffCleanUpTimeBank3[16];
 
 unsigned long lastWatchdogRun;
+long token = 0; // take any number between this number and one... the higher the better
+char charToken[17] = "1234567890123456";
+int salt = 3333;
+//           	22237776 would be the shifted and slated endresult... for above values
 
 String strpinsBank0;
 String strpinsBank1;
@@ -114,9 +120,9 @@ String strpushDurationBank1;
 String strpushDurationBank2;
 String strpushDurationBank3;
 
-
 void setup()
-{  
+{
+
   // set mode for all needed pins in each bank
   for(int out = 0; out < 16; out++)
   {
@@ -132,24 +138,27 @@ void setup()
   
   Serial.begin(115200);
   server.begin();          // Server starten
-  
+
   if (!SD.begin(4)) {
-     Serial.println("initialization failed!");
-   return;
+	if(debug)
+	     Serial.println("sd initialization failed!");
   }
-  Serial.println("initialization done.");
-  readSDSettings();
-  initBanksFromSDCarsd();
-  ip[0] = getStringPartByNr(deviceIp, '.', 0).toInt();
-  ip[1] = getStringPartByNr(deviceIp, '.', 1).toInt();
-  ip[2] = getStringPartByNr(deviceIp, '.', 2).toInt();
-  ip[3] = getStringPartByNr(deviceIp, '.', 3).toInt();
+  else
+  {
+	  if(debug)
+		  Serial.println("sd cardinitialization done.");
+	  readSDSettings();
+	  initBanksFromSDCarsd();
+	  ip[0] = getStringPartByNr(deviceIp, '.', 0).toInt();
+	  ip[1] = getStringPartByNr(deviceIp, '.', 1).toInt();
+	  ip[2] = getStringPartByNr(deviceIp, '.', 2).toInt();
+	  ip[3] = getStringPartByNr(deviceIp, '.', 3).toInt();
 
-  gateway[0] = getStringPartByNr(gatewayIp, '.', 0).toInt();
-  gateway[1] = getStringPartByNr(gatewayIp, '.', 1).toInt();
-  gateway[2] = getStringPartByNr(gatewayIp, '.', 2).toInt();
-  gateway[3] = getStringPartByNr(gatewayIp, '.', 3).toInt();
-
+	  gateway[0] = getStringPartByNr(gatewayIp, '.', 0).toInt();
+	  gateway[1] = getStringPartByNr(gatewayIp, '.', 1).toInt();
+	  gateway[2] = getStringPartByNr(gatewayIp, '.', 2).toInt();
+	  gateway[3] = getStringPartByNr(gatewayIp, '.', 3).toInt();
+  }
   Ethernet.begin(mac, ip); // Client starten
   Serial.print("server is at ");
   Serial.println(Ethernet.localIP());
@@ -157,8 +166,10 @@ void setup()
   adjustTime(10); // dont start with 0... think about buffer underruns of longs :P 
   lastWatchdogRun = now(); // set the whatchdog to current time. since there is no timesync, its second "10" in the year 0 (1970)
 
-  //digitalWrite(56, HIGH); // use 53 still as an output - remember sd card operation may be disabled now... so this is a workaround.
+  chrTokenConverter();
 
+
+  //digitalWrite(56, HIGH); // use 53 still as an output - remember sd card operation may be disabled now... so this is a workaround.
 }
 
 
@@ -184,14 +195,16 @@ void loop()
     while (client.connected()) {   
       if (client.available()) {
         char c = client.read();
-     
+		
+
         if (requestString.length() < 100) {
           requestString += c;
           //Serial.print(c);
          }
 
          //if HTTP request has ended
-         if (c == '\n') {          
+         if (c == '\n') {
+			 long myToken;
            int cmdSet = requestString.indexOf("Set/"); // see if its a set request
            int cmdGet = requestString.indexOf("Get/"); // see if its a get request
            int cmdGetAll = requestString.indexOf("GetAll"); // see if its a get request
@@ -201,36 +214,56 @@ void loop()
            {
              byte currentBank = getStringPartByNr(requestString, '/', 2).toInt(); // the 2nd part is the bank-number
              String currentPinString = getStringPartByNr(requestString, '/', 3); // the 3nd part is the decimal-value to react on
-             
-             unsigned int currentDecimal = currentPinString.substring(0, currentPinString.indexOf(" HTT")).toInt(); // remove the _HTTP... and convert to int
-             //Serial.println(currentDecimal);
-             String theBinaryString = int2bin(currentDecimal); // convert the int to a binary string
-             //Serial.println(theBinaryString);
-             String revertedBinaryString = revertBinaryString(theBinaryString);  // revese the binarystring, because its kinda tight to left.. 
-			 //Serial.println(revertedBinaryString);
+			 String currentToken = getStringPartByNr(requestString, '/', 4); // the 3nd part is the decimal-value to react on
 
-             setPinsOfBank(currentBank, revertedBinaryString); // set the pins on arduino using the index
-             SetPage(client, currentBank); // return the http status
+			 myToken = currentToken.substring(0, currentToken.indexOf(" HTT")).toInt(); // remove the _HTTP... and convert to int
+
+			 unsigned int currentDecimal = currentPinString.toInt(); // remove the _HTTP... and convert to int
+																													//Serial.println(currentDecimal);
+             String theBinaryString = int2bin(currentDecimal); // convert the int to a binary string
+             String revertedBinaryString = revertBinaryString(theBinaryString);  // revese the binarystring, because its kinda tight to left.. 
+
+			 if (!validateToken(myToken, client))
+			 {
+				 send403(client); // return the http status
+				 return;
+			 }
+			 else
+			 {
+	             setPinsOfBank(currentBank, revertedBinaryString); // set the pins on arduino using the index
+	             SetPage(client, currentBank); // return the http status
+			 }
            }
 
-           if(cmdGetAll >= 0)
-             GetAllPage(client);
+		   if (cmdGetAll >= 0)
+		   {
+			   String currentToken = getStringPartByNr(requestString, '/', 2); // the 3nd part is the decimal-value to react on
+			   myToken = currentToken.substring(0, currentToken.indexOf(" HTT")).toInt(); // remove the _HTTP... and convert to int
+
+			   GetAllPage(client, myToken);
+		   }
            
            if(cmdGet >= 0)
            {
-             byte currentBank = getStringPartByNr(requestString, '/', 2).toInt();
-             GetPage(client, currentBank);
+			   String currentToken = getStringPartByNr(requestString, '/', 3); // the 3nd part is the decimal-value to react on
+			   myToken = currentToken.substring(0, currentToken.indexOf(" HTT")).toInt(); // remove the _HTTP... and convert to int
+
+			   byte currentBank = getStringPartByNr(requestString, '/', 2).toInt();
+              GetPage(client, currentBank, myToken);
            }
            
            if(cmdSet < 0 && cmdGet < 0 && cmdGetAll < 0)
            {
-             if(cmdisLocal >=0)
-               MainPage(client, true);
-             else
-               MainPage(client, false);             
-           }
+			 String currentToken = getStringPartByNr(requestString, '/', 1); // the 3nd part is the decimal-value to react on
+			 myToken = currentToken.substring(0, currentToken.indexOf(" HTT")).toInt(); // remove the _HTTP... and convert to int
 
-           requestString="";  
+             if(cmdisLocal >=0)
+               MainPage(client, true, myToken);
+             else
+               MainPage(client, false, myToken);
+           }
+           requestString="";
+		   myToken = 0;
   
            delay(1);
            client.stop();
@@ -419,11 +452,11 @@ void readSDSettings()
 		if(character == ']')
 		{ 
 	   
-	//   //Debuuging Printing
-//			Serial.print("Name:");
-//			Serial.println(settingName);
-//			Serial.print("Value :");
-//			Serial.println(settingValue);
+	  // //Debuuging Printing
+			//Serial.print("Name:");
+			//Serial.println(settingName);
+			//Serial.print("Value :");
+			//Serial.println(settingValue);
 			
 			if(settingName == "ajaxUrl")
 				ajaxUrl = settingValue;
@@ -492,7 +525,11 @@ void readSDSettings()
 				strpushDurationBank2 = settingValue;
 			else if (settingName == "strpushDurationBank3")
 				strpushDurationBank3 = settingValue;
-
+			else if (settingName == "strToken")
+				settingValue.toCharArray(charToken,17);
+			else if (settingName == "intSalt")
+				salt = settingValue.toInt();
+			
 			settingName = "";
 			settingValue = "";
 		}
@@ -704,8 +741,17 @@ void initBanksFromSDCarsd()
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++ THE WEB PAGES ++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 /*********************************************************************************************************************************/
 
-void GetPage(EthernetClient client, byte bankNr)
+void send403(EthernetClient client)
 {
+	client.println("HTTP/1.1 403 OK"); //send new page
+	client.println("Content-Type: text/html");
+}
+
+
+void GetPage(EthernetClient client, byte bankNr, long myToken)
+{
+  if (!validateToken(myToken, client))
+	return;
   unsigned int mu = getPinsOfBank(bankNr);
   client.println("HTTP/1.1 200 OK"); //send new page
   client.println("Content-Type: text/html");
@@ -716,8 +762,10 @@ void GetPage(EthernetClient client, byte bankNr)
   client.print("})");
 }
 
-void GetAllPage(EthernetClient client)
+void GetAllPage(EthernetClient client, long myToken)
 {
+  if (!validateToken(myToken, client))
+	return;
   String mu = getComplete();
   client.println("HTTP/1.1 200 OK"); //send new page
   client.println("Content-Type: text/html");
@@ -735,8 +783,11 @@ void SetPage(EthernetClient client, byte bankNr)
   client.println("Content-Type: text/html");  
 }
 
-void MainPage(EthernetClient client, boolean isLocal)
+void MainPage(EthernetClient client, boolean isLocal, long myToken)
 {
+  if (!validateToken(myToken, client))
+	return;
+
    client.println("HTTP/1.1 200 OK"); //send new page
    client.println("Content-Type: text/html");
    client.println();
@@ -782,6 +833,28 @@ void MainPage(EthernetClient client, boolean isLocal)
    client.println("\"></div><div id=\"bank3\"></div></div><div id=\"tempResponse\"></div>");
    client.println("</BODY>");
    client.println("</HTML>");
+}
+
+boolean validateToken(long myToken, EthernetClient client)
+{
+	long temp = (myToken/salt) >> 3;
+	Serial.println(temp);
+	if (token == temp)
+		return true;
+
+	send403(client);
+	return false;
+}
+
+void chrTokenConverter()
+{
+	long temp;
+	for (int i = 0; i<sizeof(charToken)-1; i++)
+	{
+		token += charToken[i];
+	}
+	Serial.println("Your token for javascipt is: ");
+	Serial.print((token*salt) << 3);
 }
 
 

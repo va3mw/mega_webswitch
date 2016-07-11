@@ -25,6 +25,8 @@ var mobileMultiplier = 3;
 var isMouseOver = false;
 var isMobile = false;
 
+var secToken = 33196680;
+
 $(document).ready(function() {
    init();
 });
@@ -276,7 +278,7 @@ function getAllContent() {
 			headers: {
 				'Access-Control-Allow-Origin': '*'
 			},
-			url: ajaxArduinoUrl + "/GetAll?callback=?",
+			url: ajaxArduinoUrl + "/GetAll/"+secToken+"?callback=?",
 			dataType: 'jsonp',
 			jsonpCallback:'xx'})
 			.done(function(data){ 
@@ -295,7 +297,7 @@ function setContent(currentBank, toBankValue) {
 			headers: {
 				'Access-Control-Allow-Origin': '*'
 			},
-			url: ajaxArduinoUrl + "/Set/"+currentBank+"/"+toBankValue,
+			url: ajaxArduinoUrl + "/Set/"+currentBank+"/"+toBankValue+"/"+secToken,
 			contentType: "text/html",
 			dataType: "html",
 			success: function(data) {}
