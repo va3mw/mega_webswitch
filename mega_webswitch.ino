@@ -22,7 +22,7 @@
 #endif
 #include <Ethernet.h>
 #include <HashMap.h>
-#include <Time.h>
+#include <TimeLib.h>
 #include <SD.h>
 //#define FILLARRAY(a,n) a[0]=n, memcpy( ((char*)a)+sizeof(a[0]), a, sizeof(a)-sizeof(a[0]) );
 
